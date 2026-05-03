@@ -11,12 +11,11 @@ import matplotlib.pyplot as plt
 from qenergy import components as comp
 from qenergy.experiments_dv import BB84Experiment
 
-from studies import FIGSIZE_HALF, EXPORT_DIR
+from studies import FIGSIZE_HALF, EXPORT_DIR, GIGABIT, MJ
 
 dist = [d / 100 for d in range(1000)]
-gigabit = 1e9
 pcoupling = 0.9
-sourcerate = 80 * 10**6
+sourcerate = 80e6
 mu = 0.1
 QBER = 0.01
 
@@ -68,22 +67,22 @@ Experiment03 = BB84Experiment(
     sourcerate, pcoupling, mu, wavelength523, QBER, laser523, detector523, dist, other
 )
 
-tskr = Experiment01.time_skr(gigabit)
-tskr2 = Experiment02.time_skr(gigabit)
-tskr3 = Experiment03.time_skr(gigabit)
-tskr4 = Experiment015.time_skr(gigabit)
+tskr = Experiment01.time_skr(GIGABIT)
+tskr2 = Experiment02.time_skr(GIGABIT)
+tskr3 = Experiment03.time_skr(GIGABIT)
+tskr4 = Experiment015.time_skr(GIGABIT)
 
-Energy1550snspd = [Experiment01.total_energy(t) / 1000000 for t in tskr]
-Energy1550apd = [Experiment015.total_energy(t) / 1000000 for t in tskr4]
-Energy780 = [Experiment02.total_energy(t) / 1000000 for t in tskr2]
-Energy523 = [Experiment03.total_energy(t) / 1000000 for t in tskr3]
+Energy1550snspd = [Experiment01.total_energy(t) / MJ for t in tskr]
+Energy1550apd = [Experiment015.total_energy(t) / MJ for t in tskr4]
+Energy780 = [Experiment02.total_energy(t) / MJ for t in tskr2]
+Energy523 = [Experiment03.total_energy(t) / MJ for t in tskr3]
 
 
 fig, ax = plt.subplots(1, figsize=FIGSIZE_HALF)
-ax.plot(dist, Energy1550snspd, label="$\\lambda=1550$nm, SNSPDs")
-ax.plot(dist, Energy1550apd, label="$\\lambda=1550$nm, APDs")
-ax.plot(dist, Energy780, label="$\\lambda=780$nm, APDs")
-ax.plot(dist, Energy523, label="$\\lambda=523$nm, APDs")
+ax.plot(dist[:len(Energy1550snspd)], Energy1550snspd, label="$\\lambda=1550$nm, SNSPDs")
+ax.plot(dist[:len(Energy1550apd)], Energy1550apd, label="$\\lambda=1550$nm, APDs")
+ax.plot(dist[:len(Energy780)], Energy780, label="$\\lambda=780$nm, APDs")
+ax.plot(dist[:len(Energy523)], Energy523, label="$\\lambda=523$nm, APDs")
 
 plt.yscale("log")
 ax.set(xlabel="Distance [km]", ylabel="Energy consumption [MJ]")

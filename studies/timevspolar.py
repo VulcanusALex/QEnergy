@@ -11,12 +11,11 @@ import matplotlib.pyplot as plt
 from qenergy import components as comp
 from qenergy.experiments_dv import BB84Experiment
 
-from studies import FIGSIZE_HALF, EXPORT_DIR
+from studies import FIGSIZE_HALF, EXPORT_DIR, GIGABIT, MJ
 
-dist = [d for d in range(100)]
-gigabit = 1e9
+dist = list(range(100))
 pcoupling = 0.9
-sourcerate = 80 * 10**6
+sourcerate = 80e6
 mu = 0.1
 QBER = 0.01
 
@@ -51,16 +50,16 @@ Experiment02 = BB84Experiment(
 )
 
 
-tskr = Experiment01.time_skr(gigabit)
-tskr2 = Experiment02.time_skr(gigabit)
+tskr = Experiment01.time_skr(GIGABIT)
+tskr2 = Experiment02.time_skr(GIGABIT)
 
-Energypolar = [Experiment01.total_energy(t) / 1000000 for t in tskr]
-Energytimebin = [Experiment02.total_energy(t) / 1000000 for t in tskr2]
+Energypolar = [Experiment01.total_energy(t) / MJ for t in tskr]
+Energytimebin = [Experiment02.total_energy(t) / MJ for t in tskr2]
 
 
 fig, ax = plt.subplots(1, figsize=FIGSIZE_HALF)
-plt.plot(dist, Energypolar, label="Polarization encoding")
-plt.plot(dist, Energytimebin, label="Time-bin encoding")
+plt.plot(dist[:len(Energypolar)], Energypolar, label="Polarization encoding")
+plt.plot(dist[:len(Energytimebin)], Energytimebin, label="Time-bin encoding")
 
 # plt.yscale("log")
 ax.set(xlabel="Distance [km]", ylabel="Energy consumption [MJ]")

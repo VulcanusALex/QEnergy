@@ -6,7 +6,6 @@
 import numpy as np
 from qenergy import components as comp
 
-# from cvqkd import *
 from qenergy.skr_cv import skr_asymptotic_homodyne_psk, skr_asymptotic_heterodyne_psk
 from qenergy.skr_cv import skr_asymptotic_homodyne, skr_asymptotic_heterodyne
 from qenergy.skr_cv import skr_asymptotic_cka
@@ -28,14 +27,14 @@ class CVExperiment(Experiment):
         beta (float): Information reconciliation efficiency
     """
 
-    def __init__(self, eta, Vel, beta, allcomponent=[]):
+    def __init__(self, eta, Vel, beta, allcomponent=None):
         super().__init__()
-        self.wavelength = 1550  # The wavelength is constant
+        self.wavelength = 1550
         self.eta = eta
         self.Vel = Vel
         self.beta = beta
         self.fiber = comp.Fiber(self.wavelength)
-        self.list_components = allcomponent
+        self.list_components = allcomponent if allcomponent is not None else []
 
 
 class CVQKDProtocol(CVExperiment):
@@ -67,7 +66,7 @@ class CVQKDProtocol(CVExperiment):
         xi,
         dist,
         protocol,
-        othercomponent=[],
+        othercomponent=None,
     ):
         super().__init__(eta, Vel, beta)
         self.sourcerate = sourcerate
@@ -76,7 +75,7 @@ class CVQKDProtocol(CVExperiment):
         self.setup = detector[0]
         self.xi = xi
         self.dist = dist
-        self.othercomponent = othercomponent
+        self.othercomponent = othercomponent if othercomponent is not None else []
         self.protocol = protocol
         self.list_components = self.source + self.detector + self.othercomponent
 
@@ -141,7 +140,6 @@ class CVQKDProtocol(CVExperiment):
                 )
                 for va in vas
             ]
-            # Return skr as bits per second
             skrates.append(number_polarizations * np.max(key_rates) * self.sourcerate)
 
         return skrates
@@ -171,15 +169,15 @@ class CKAExperiment(Experiment):
 
     """
 
-    def __init__(self, eta, Vel, beta, number_users, allcomponent=[]):
+    def __init__(self, eta, Vel, beta, number_users, allcomponent=None):
         super().__init__()
-        self.wavelength = 1550  # The wavelength is constant
+        self.wavelength = 1550
         self.eta = eta
         self.Vel = Vel
         self.beta = beta
         self.number_users = number_users
         self.fiber = comp.Fiber(self.wavelength)
-        self.list_components = allcomponent
+        self.list_components = allcomponent if allcomponent is not None else []
 
 
 class CKAProtocol(CKAExperiment):
@@ -221,7 +219,7 @@ class CKAProtocol(CKAExperiment):
         detector,
         xi,
         dist,
-        othercomponent=[],
+        othercomponent=None,
     ):
         super().__init__(eta, Vel, beta, number_users)
         self.sourcerate = sourcerate
@@ -229,7 +227,7 @@ class CKAProtocol(CKAExperiment):
         self.detector = detector
         self.xi = xi
         self.dist = dist
-        self.othercomponent = othercomponent
+        self.othercomponent = othercomponent if othercomponent is not None else []
         self.list_components = [self.source] + [self.detector] + self.othercomponent
 
     def compute_secret_key_rate(self):
@@ -258,11 +256,10 @@ class CKAProtocol(CKAExperiment):
                 )
                 for va in vas
             ]
-            # Return skr as bits per second
             skrates.append(np.nanmax(key_rates) * self.sourcerate)
 
         return skrates
 
     def time_skr(self, objective):
         """Time necessary to create 'objective' secret bits"""
-        return [objective / R for R in self.compute_secret_key_rate()]
+        return [objective / R for R in self.compute_secret_key_rate() if R > 0]

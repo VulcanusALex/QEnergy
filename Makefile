@@ -1,6 +1,12 @@
 all: export plots
 
-.PHONY: plots
+.PHONY: plots test check
+
+test:
+	python3 -m unittest discover -s tests -v
+
+check: test
+	python3 -c "import ast, pathlib, sys; [ast.parse(f.read_text(), str(f)) for f in pathlib.Path('.').rglob('*.py') if '.git' not in str(f) and '__pycache__' not in str(f)]; print('Syntax check passed')"
 
 plots: export/AlltoAll.pdf export/BB84detectstudy.pdf export/BB84QBERstudy.pdf export/BB84wavelengthstudy.pdf export/CKAstudydist.pdf export/CKAstudy.pdf export/CVVSDVstudy.pdf export/CVCKAstudy.pdf cv_plots export/EE.pdf export/MeasuredValues.pdf export/piecharts.pdf export/DVprotocolstudy.pdf export/timebinstudy.pdf
 

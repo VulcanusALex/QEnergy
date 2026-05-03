@@ -3,21 +3,18 @@
 # This software is released under the MIT License.
 # https://opensource.org/licenses/MIT
 
+"""
+Secret key rate formulae for continuous-variable QKD protocols.
+"""
+
 import numpy as np
 
-# import scipy as sp
-# from numba import njit,prange
 
-
-def G(x) -> float:
+def G(x: float) -> float:
+    """Von Neumann entropy helper: g(x) = (x+1)log2(x+1) - x*log2(x)."""
     if x == 0:
         return 0
     return (x + 1) * np.log2(x + 1) - x * np.log2(x)
-
-
-##############################################################################
-################### KEY RATE FORMULAE ########################################
-##############################################################################
 
 
 def skr_asymptotic_homodyne(
@@ -94,7 +91,7 @@ def skr_asymptotic_homodyne_psk(
 
 def skr_asymptotic_cka(
     Va: float,
-    T,
+    T: float,
     xi: float,
     eta: float,
     Vel: float,
@@ -108,11 +105,6 @@ def skr_asymptotic_cka(
         0,
         None,
     )
-
-
-##############################################################################
-####################### ENTROPIC QUANTITIES ##################################
-##############################################################################
 
 
 def iab_asymptotic_homodyne(
@@ -188,12 +180,6 @@ def holevo_asymptotic_heterodyne(
     )
 
 
-############################################################################################
-####################### FUNCTIONS FOR PSK ##################################################
-############################################################################################
-
-
-# @njit
 def holevo_asymptotic_heterodyne_psk(
     Va: float, T: float, xi: float, eta: float, Vel: float, number_states: int = 4
 ) -> float:
@@ -208,8 +194,6 @@ def holevo_asymptotic_heterodyne_psk(
     cmatrix[0:2, 2:4] = np.diag(np.array([Z, -Z]))
     cmatrix[2:4, 0:2] = np.diag(np.array([Z, -Z]))
 
-    # DetCmatrix = (V*W - Z**2)**2
-
     # Symplectic eigenvalues
     delta = V**2 + W**2 - 2 * np.abs(Z) ** 2
     nu1 = np.sqrt((delta + np.sqrt(delta**2 - 4 * np.linalg.det(cmatrix))) / 2)
@@ -218,23 +202,15 @@ def holevo_asymptotic_heterodyne_psk(
     # Conditional symplectic eigenvalue
     nu3 = V - (Z**2) / (W + 1)
 
-    # Mual info from covariance matrix
-    # MI = np.log2((1+ V**2 + 2*V)/(1+ nu3**2 + 2*nu3))/2
-
-    g = lambda x: (x + 1) * np.log2(x + 1) - x * np.log2(x) if x != 0 else 0
-
     # Holevo information
-    return g((nu1 - 1) / 2) + g((nu2 - 1) / 2) - g((nu3 - 1) / 2)
+    return G((nu1 - 1) / 2) + G((nu2 - 1) / 2) - G((nu3 - 1) / 2)
 
 
-# @njit
 def holevo_asymptotic_homodyne_psk(
     Va: float, T: float, xi: float, eta: float, Vel: float, number_states: int = 4
 ) -> float:
 
     V = 1 + Va
-    # Note that calculating W for homodyne distillation is
-    # optimized when Bob performs heterodyne detection in PE
     W = 1 + Va * eta * T + xi * eta * T + Vel
 
     Z = z_psk(Va, T, xi, eta, Vel, number_states)
@@ -244,8 +220,6 @@ def holevo_asymptotic_homodyne_psk(
     cmatrix[0:2, 2:4] = np.diag(np.array([Z, -Z]))
     cmatrix[2:4, 0:2] = np.diag(np.array([Z, -Z]))
 
-    # DetCmatrix = (V*W - Z**2)**2
-
     # Symplectic eigenvalues
     delta = V**2 + W**2 - 2 * np.abs(Z) ** 2
     nu1 = np.sqrt((delta + np.sqrt(delta**2 - 4 * np.linalg.det(cmatrix))) / 2)
@@ -254,13 +228,10 @@ def holevo_asymptotic_homodyne_psk(
     # Conditional symplectic eigenvalue
     nu3 = np.sqrt(V * (V - (Z**2) / W))
 
-    g = lambda x: (x + 1) * np.log2(x + 1) - x * np.log2(x) if x != 0 else 0
-
     # Holevo information
-    return g((nu1 - 1) / 2) + g((nu2 - 1) / 2) - g((nu3 - 1) / 2)
+    return G((nu1 - 1) / 2) + G((nu2 - 1) / 2) - G((nu3 - 1) / 2)
 
 
-# @njit
 def z_psk(
     Va: float, T: float, xi: float, eta: float, Vel: float, number_states: int
 ) -> float:
@@ -268,7 +239,7 @@ def z_psk(
     amp2 = Va / 2
     theta = 2 * np.pi / number_states
 
-    # Coefficients of the (Schimdt-decomposed) states via a Fourier transform
+    # Coefficients of the (Schmidt-decomposed) states via a Fourier transform
     nu = [
         np.sum(
             [
@@ -283,8 +254,6 @@ def z_psk(
     # Clear imaginary residuals
     nu = np.real(nu)
 
-    # Value of Z for a general M-PSK modulation
-    ###########################################
     aux1 = np.sum(
         [(nu[k - 1] ** (3 / 2)) / np.sqrt(nu[k]) for k in range(number_states)]
     )
@@ -296,11 +265,6 @@ def z_psk(
         * np.sqrt(amp2)
         * np.sqrt(np.exp(-amp2) * aux2 - np.exp(-2 * amp2) * aux1**2)
     )
-
-
-############################################################################################
-####################### FUNCTIONS FOR CKA ##################################################
-############################################################################################
 
 
 def iab_asymptotic_cka(

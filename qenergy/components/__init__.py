@@ -7,9 +7,7 @@
 Modules with the different components and their associated cost.
 """
 
-from .base import *
+from .base import Component, PassiveComponent, ActiveComponent
 from .detectors import *
 from .lasers import *
 from .others import *
-
-__all__ = [s for s in dir() if not s.startswith("_")]

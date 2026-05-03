@@ -16,25 +16,22 @@ class Experiment:
     """
     Base experiment.
 
-    All experiments have a list of components that can be used to derive the consummed power.
+    All experiments have a list of components that can be used to derive the consumed power.
     """
 
-    list_components: List[Component]  #: List of components of the experiment.
+    list_components: List[Component]
 
     def total_energy(self, time: float) -> float:
         """
         Returns the total energy required to run the experiment for a time t.
 
         Args:
-            time (float): duration of the experiment.
+            time (float): duration of the experiment in seconds.
 
         Returns:
-            float: total energy to run the experiment for a time t.
+            float: total energy in Joules.
         """
-        tot = 0
-        for component in self.list_components:
-            tot += component.power * time + component.fixed_energy
-        return tot
+        return sum(c.total_energy(time) for c in self.list_components)
 
     def total_energy_measured(self, time: float) -> float:
         """
@@ -42,24 +39,27 @@ class Experiment:
         based on the measured values of the components.
 
         Args:
-            time (float): duration of the experiment.
+            time (float): duration of the experiment in seconds.
 
         Returns:
-            float: total energy to run the experiment for a time t based on the measured values.
+            float: total energy in Joules based on measured values.
         """
-        tot = 0
-        for component in self.list_components:
-            tot += component.total_energy_measured(time)
-        return tot
+        return sum(c.total_energy_measured(time) for c in self.list_components)
 
-    def power(self) -> float:
+    def total_power(self) -> float:
         """
-        Returns the total power consummed by all the components of the setup.
+        Returns the total power consumed by all the components of the setup.
 
         Returns:
-            float: total consummed power by all the components.
+            float: total consumed power in Watts.
         """
-        tot = 0
-        for component in self.list_components:
-            tot += component.power
-        return tot
+        return sum(c.power for c in self.list_components)
+
+    def total_fixed_energy(self) -> float:
+        """
+        Returns the total fixed (startup) energy of all components.
+
+        Returns:
+            float: total fixed energy in Joules.
+        """
+        return sum(c.fixed_energy for c in self.list_components)

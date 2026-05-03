@@ -52,6 +52,13 @@ class Fiber(PassiveComponent):
     _attenuation_fiber_db_km: float
     _attenuation_distance: float
 
+    ATTENUATION_DB_KM = {
+        1550: 0.18,
+        780: 4,
+        523: 30,
+        532: 30,
+    }
+
     def __init__(
         self,
         wavelength: float,
@@ -64,23 +71,21 @@ class Fiber(PassiveComponent):
         to 0.2dB/km (typical fiber loss in telecommunication fiber)
         """
         super(Fiber, self).__init__()
-        # Speed of light in a fiber
         self.light_speed = (
             2 / 3.0 * physical_constants["speed of light in vacuum"][0] / 10**3
         )
-        self.dephasing = dephasing  # dephasing rate per km (in Hz)
-        self.coupling = coupling  # fiber coupling efficiency
+        self.dephasing = dephasing
+        self.coupling = coupling
 
-        if length is None:
-            self._length = 0
-        else:
-            self._length = length
-        if wavelength == 1550:
-            self._attenuation_fiber_db_km = 0.18
-        elif wavelength == 780:
-            self._attenuation_fiber_db_km = 4
-        elif wavelength == 523:
-            self._attenuation_fiber_db_km = 30
+        self._length = length if length is not None else 0
+
+        if wavelength not in self.ATTENUATION_DB_KM:
+            raise ValueError(
+                f"Unsupported wavelength {wavelength} nm. "
+                f"Supported: {sorted(self.ATTENUATION_DB_KM.keys())}"
+            )
+        self._attenuation_fiber_db_km = self.ATTENUATION_DB_KM[wavelength]
+        self._attenuation_distance = self.convert(self._attenuation_fiber_db_km)
 
     @property
     def T(self):
@@ -113,7 +118,7 @@ class Fiber(PassiveComponent):
 
     @length.setter
     def length(self, value: float):
-        if type(value) not in [int, float]:
+        if not isinstance(value, (int, float)):
             raise ValueError("distance L should be a positive real.")
         if value < 0:
             raise ValueError("distance L should be a positive real.")
@@ -145,7 +150,7 @@ class SwitchIntensityModulator(ActiveComponent):
 class Cryostat(ActiveComponent):
     name = "Cryostat"
     power = 3000  # all electronics and compressors included, except computer
-    fixed_energy = 72000  # Approximately 24h long setup on initial cooling
+    fixed_energy = 24 * 60 * 60 * 3000  # Approximately 24h long setup on initial cooling
     cooling_time = 0  # 1h long cooling needed every 24h, models exist without that
 
 

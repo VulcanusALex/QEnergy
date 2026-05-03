@@ -12,12 +12,11 @@ from qenergy.experiments_dv import (
 )
 
 import matplotlib.ticker as mticker
-from studies import FIGSIZE_HALF, EXPORT_DIR
+from studies import FIGSIZE_HALF, EXPORT_DIR, GIGABIT
 
 dist = range(20)
-gigabit = 1e9
 pcoupling = 0.9
-sourcerate = 100 * 10**6
+sourcerate = 100e6
 mu = 0.1
 QBER = 0
 parties = 5
@@ -43,7 +42,7 @@ for i in dist:
             parties,
             detector,
             i,
-            othercomponent=[],
+            othercomponent=None,
         )
     )
 
@@ -81,22 +80,16 @@ E91experiment = EntanglementBasedExperiment(
     othercomponentE91,
 )
 
-tGHZ = []
-for i in range(len(GHZexperiments)):
-    tGHZ.append(GHZexperiments[i].raw_time_ghz(gigabit))
+GJ = 1e9
 
-tE91 = E91experiment.time_skr(gigabit)
-tBB84 = BB84Experiment.time_skr(gigabit)
+tGHZ = [exp.raw_time_ghz(GIGABIT) for exp in GHZexperiments]
 
+tE91 = E91experiment.time_skr(GIGABIT)
+tBB84 = BB84Experiment.time_skr(GIGABIT)
 
-EnergyGHZ = []
-for i in range(len(GHZexperiments)):
-    EnergyGHZ.append(GHZexperiments[i].total_energy(tGHZ[i]) / 1000000000)
-
-
-EnergyE91 = [parties * E91experiment.total_energy(t) / 1000000000 for t in tE91]
-
-EnergyBB84 = [parties * BB84Experiment.total_energy(t) / 1000000000 for t in tBB84]
+EnergyGHZ = [exp.total_energy(t) / GJ for exp, t in zip(GHZexperiments, tGHZ)]
+EnergyE91 = [parties * E91experiment.total_energy(t) / GJ for t in tE91]
+EnergyBB84 = [parties * BB84Experiment.total_energy(t) / GJ for t in tBB84]
 
 N = 4
 fig, ax = plt.subplots(1, figsize=FIGSIZE_HALF)

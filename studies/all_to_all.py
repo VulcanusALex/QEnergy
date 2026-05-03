@@ -12,12 +12,11 @@ import matplotlib.pyplot as plt
 from qenergy import components as comp
 from qenergy.experiments_dv import GHZsharing, EntanglementBasedExperiment
 
-from studies import EXPORT_DIR, FIGSIZE_FULL
+from studies import EXPORT_DIR, FIGSIZE_FULL, GIGABIT, MJ
 
 dist = 10
-gigabit = 1e9
 pcoupling = 0.9
-sourcerate = 100 * 10**6
+sourcerate = 100e6
 mu = 0.1
 QBER = 0
 parties = range(2, 11)
@@ -43,7 +42,7 @@ for i in parties:
             i,
             detector,
             np.array([dist]),
-            othercomponent=[],
+            othercomponent=None,
         )
     )
 
@@ -70,26 +69,16 @@ E91experiments = EntanglementBasedExperiment(
     othercomponentE91,
 )
 
-tGHZ = []
+tGHZ = [exp.raw_time_ghz(GIGABIT) for exp in GHZexperiments]
 
-for i in range(len(GHZexperiments)):
-    tGHZ.append(GHZexperiments[i].raw_time_ghz(gigabit))
+tE91 = E91experiments.time_skr(GIGABIT)[0]
 
-tE91 = E91experiments.time_skr(gigabit)[0]
-
-
-EnergyGHZ = []
-for i in range(len(GHZexperiments)):
-    EnergyGHZ.append(GHZexperiments[i].total_energy(tGHZ[i]) / 1000000)
-
+EnergyGHZ = [exp.total_energy(t) / MJ for exp, t in zip(GHZexperiments, tGHZ)]
 
 EnergyE91 = []
-tot = 0
-for i in parties:
-    n = int(i * (i - 1) / 2)
-    for i in range(n):
-        tot += E91experiments.total_energy(tE91) / 1000000
-    EnergyE91.append(tot)
+for num_parties in parties:
+    num_pairs = num_parties * (num_parties - 1) // 2
+    EnergyE91.append(num_pairs * E91experiments.total_energy(tE91) / MJ)
 
 
 fig, ax = plt.subplots(1, figsize=FIGSIZE_FULL)

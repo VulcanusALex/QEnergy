@@ -11,13 +11,11 @@ import matplotlib.pyplot as plt
 from qenergy import components as comp
 from qenergy.experiments_cv import CKAProtocol
 
-from studies import FIGSIZE_HALF, EXPORT_DIR
+from studies import FIGSIZE_HALF, EXPORT_DIR, GIGABIT, MJ
 
 
 # Parameters of the plot
-dist_CKA = [d / 2000 for d in range(1100)]  # Points of the plot
-gigabit = 1e9  # Target number of secret bits
-MJ = 1e6  # Change of scale to megajoules
+dist_CKA = [d / 2000 for d in range(1100)]
 
 # Parameters of the implementation
 eta = 0.7  # Detector efficiency
@@ -29,7 +27,7 @@ detector = comp.DetectorsCVCKA()  # Detector (depends on the no. of users mod.4)
 xi = 0.005  # Excess noise
 
 
-Nusers = [i for i in range(3, 7)]  # No. of parties involved in the scheme
+Nusers = list(range(3, 7))
 
 fig, ax = plt.subplots(1, figsize=FIGSIZE_HALF)
 
@@ -38,9 +36,9 @@ for N in Nusers:
     Experiment_CKA = CKAProtocol(
         eta, Vel, beta, N, sourcerate, source, detector, xi, dist_CKA
     )
-    tsk_CKA = Experiment_CKA.time_skr(gigabit)
+    tsk_CKA = Experiment_CKA.time_skr(GIGABIT)
     Energy_CKA = [Experiment_CKA.total_energy(t) / MJ for t in tsk_CKA]
-    plt.plot(dist_CKA, Energy_CKA, label=f"{N} users")
+    plt.plot(dist_CKA[:len(Energy_CKA)], Energy_CKA, label=f"{N} users")
 
 
 ax.set(xlabel="Distance [km]", ylabel="Energy consumption [MJ]")

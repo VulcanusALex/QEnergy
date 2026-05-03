@@ -40,7 +40,7 @@ class Component:
         """
         Return the total energy spent for a given time, based on measured power.
 
-        If the measured power is 0, falls back on the datasheet values.
+        If the measured power is 0 or None, falls back on the datasheet values.
 
         Args:
             time (float): time in seconds.
@@ -48,12 +48,9 @@ class Component:
         Returns:
             float: total energy fixed_energy_measured + measured_power*t.
         """
-        energy = 0
-        if self.meas_power == 0:
-            energy = self.fixed_energy + time * self.power
-        else:
-            energy = self.fixed_energy_meas + time * self.meas_power
-        return energy
+        if not self.meas_power:
+            return self.fixed_energy + time * self.power
+        return self.fixed_energy_meas + time * self.meas_power
 
 
 class PassiveComponent(Component):

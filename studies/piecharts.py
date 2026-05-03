@@ -131,7 +131,7 @@ source = {
 }  # Add intensity modulator ??
 detection = {
     "Detectors": comp.DetectorSNSPD1550.power,
-    "Time taggecomp.r": comp.TimeTagger.power,
+    "Time tagger": comp.TimeTagger.power,
 }  # Add detector ?
 
 total_sum = sum(source.values()) + sum(detection.values())
@@ -206,7 +206,6 @@ ax4.pie(
 )
 
 ax4.set_title("CV-QKD", fontsize=11)
-plt.show()
 fig.tight_layout()
-# fig.set_figwidth(BASE_TEXTWIDTH_IN)
 fig.savefig(EXPORT_DIR / "piecharts.pdf", format="pdf")
+plt.show()

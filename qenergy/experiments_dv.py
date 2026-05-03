@@ -4,7 +4,7 @@
 # https://opensource.org/licenses/MIT
 
 import math
-from typing import List
+from typing import List, Optional
 
 from qenergy.components import Component, Fiber, Oven, MotorizedWavePlate, Computer
 from qenergy.experiments import Experiment
@@ -26,14 +26,14 @@ class DVExperiment(Experiment):
         Wavelength of experiment [nm]
     """
 
-    def __init__(self, sourcerate, pcoupling, mu, wavelength, allcomponent=[]):
+    def __init__(self, sourcerate, pcoupling, mu, wavelength, allcomponent=None):
         super().__init__()
         self.sourcerate = sourcerate
         self.pcoupling = pcoupling
         self.mu = mu
         self.wavelength = wavelength
         self.fiber = Fiber(self.wavelength)
-        self.list_components = allcomponent
+        self.list_components = allcomponent if allcomponent is not None else []
 
     def h(self, p: float) -> float:
         """
@@ -88,14 +88,14 @@ class BB84Experiment(DVExperiment):
         source,
         detector,
         dist,
-        othercomponent=[],
+        othercomponent=None,
     ):
         super().__init__(sourcerate, pcoupling, mu, wavelength)
         self.qber = qber
         self.source = source
         self.detector = detector
         self.dist = dist
-        self.othercomponent = othercomponent
+        self.othercomponent = othercomponent if othercomponent is not None else []
         self.list_components = [self.source] + [self.detector] + self.othercomponent
 
     def compute_raw_rate(self):
@@ -104,20 +104,20 @@ class BB84Experiment(DVExperiment):
         return [
             self.sourcerate
             * self.mu
-            * (self.pcoupling)
+            * self.pcoupling
             * self.detector.efficiency
             * (10 ** (-self.fiber.attenuation_fiber_db_km * d / 10))
             for d in self.dist
         ]
 
     def compute_secret_key_rate(self):
-        """Calculation of the raw rate of the BB84 experiment
-        returns an array of raw rates for all the distance considered"""
+        """Calculation of the secret key rate of the BB84 experiment
+        returns an array of secret key rates for all the distance considered"""
         return [R * (1 - 2 * self.h(self.qber)) for R in self.compute_raw_rate()]
 
     def time_skr(self, objective):
         """Time necessary to create 'objective' secret bits"""
-        return [objective / R for R in self.compute_secret_key_rate()]
+        return [objective / R for R in self.compute_secret_key_rate() if R > 0]
 
 
 class EntanglementBasedExperiment(DVExperiment):
@@ -159,7 +159,7 @@ class EntanglementBasedExperiment(DVExperiment):
         detector_alice: Component,
         detector_bob: Component,
         dist: List[float],
-        othercomponent: List[Component] = [],
+        othercomponent: Optional[List[Component]] = None,
     ):
         super().__init__(sourcerate, pcoupling, mu, wavelength)
         self.qber = qber
@@ -167,7 +167,7 @@ class EntanglementBasedExperiment(DVExperiment):
         self.detector_alice = detector_alice
         self.detector_bob = detector_bob
         self.dist = dist
-        self.othercomponent = othercomponent
+        self.othercomponent = othercomponent if othercomponent is not None else []
         self.list_components = (
             [self.source]
             + [self.detector_alice]
@@ -176,26 +176,26 @@ class EntanglementBasedExperiment(DVExperiment):
         )
 
     def compute_raw_rate(self):
-        """Calculation of the raw rate of the BB84 experiment
+        """Calculation of the raw rate of the E91 experiment
         returns an array of raw rates for all the distance considered"""
         return [
             self.sourcerate
             * self.mu
             * (self.pcoupling**2)
-            * (self.detector_alice.efficiency)
-            * (self.detector_bob.efficiency)
+            * self.detector_alice.efficiency
+            * self.detector_bob.efficiency
             * (10 ** (-self.fiber.attenuation_fiber_db_km * d / 10))
             for d in self.dist
         ]
 
     def compute_secret_key_rate(self):
-        """Calculation of the raw rate of the BB84 experiment
-        returns an array of raw rates for all the distance considered"""
+        """Calculation of the secret key rate of the E91 experiment
+        returns an array of secret key rates for all the distance considered"""
         return [R * (1 - 2 * self.h(self.qber)) for R in self.compute_raw_rate()]
 
     def time_skr(self, objective):
         """Time necessary to create 'objective' secret bits"""
-        return [objective / R for R in self.compute_secret_key_rate()]
+        return [objective / R for R in self.compute_secret_key_rate() if R > 0]
 
 
 class MDIQKDExperiment(DVExperiment):
@@ -240,7 +240,7 @@ class MDIQKDExperiment(DVExperiment):
         detector,
         dist,
         pbsm,
-        othercomponent=[],
+        othercomponent=None,
     ):
         super().__init__(sourcerate, pcoupling, mu, wavelength)
         self.qber = qber
@@ -248,7 +248,7 @@ class MDIQKDExperiment(DVExperiment):
         self.source_bob = source_bob
         self.detector = detector
         self.dist = dist
-        self.othercomponent = othercomponent
+        self.othercomponent = othercomponent if othercomponent is not None else []
         self.pbsm = pbsm
         self.list_components = (
             [self.source_alice]
@@ -258,12 +258,11 @@ class MDIQKDExperiment(DVExperiment):
         )
 
     def compute_raw_rate(self):
-        """Calculation of the raw rate of the BB84 experiment
+        """Calculation of the raw rate of the MDI-QKD experiment
         returns an array of raw rates for all the distance considered"""
         return [
             self.sourcerate
-            * self.mu
-            * self.mu
+            * self.mu**2
             * (self.pcoupling**2)
             * (self.detector.efficiency**2)
             * (10 ** (-self.fiber.attenuation_fiber_db_km * d / 10))
@@ -272,17 +271,17 @@ class MDIQKDExperiment(DVExperiment):
         ]
 
     def compute_secret_key_rate(self):
-        """Calculation of the raw rate of the BB84 experiment
-        returns an array of raw rates for all the distance considered"""
+        """Calculation of the secret key rate of the MDI-QKD experiment
+        returns an array of secret key rates for all the distance considered"""
         return [R * (1 - 2 * self.h(self.qber)) for R in self.compute_raw_rate()]
 
     def time_skr(self, objective):
         """Time necessary to create 'objective' secret bits"""
-        return [objective / R for R in self.compute_secret_key_rate()]
+        return [objective / R for R in self.compute_secret_key_rate() if R > 0]
 
     def raw_time(self, objective):
         """Time necessary to create 'objective' bits"""
-        return [objective / R for R in self.compute_raw_rate()]
+        return [objective / R for R in self.compute_raw_rate() if R > 0]
 
 
 class GHZsharing(DVExperiment):
@@ -301,7 +300,7 @@ class GHZsharing(DVExperiment):
         Wavelength of experiment [nm]
     `qber` : float
         Qubit Error Rate
-    `source_ghz`: Componentsinner
+    `source_ghz`: Component
         laser used from component.py
     `n`: int
         Number of parties involved
@@ -324,7 +323,7 @@ class GHZsharing(DVExperiment):
         n,
         detector,
         dist,
-        othercomponent=[],
+        othercomponent=None,
     ):
         super().__init__(sourcerate, pcoupling, mu, wavelength)
         self.qber = qber
@@ -332,8 +331,8 @@ class GHZsharing(DVExperiment):
         self.detector = detector
         self.dist = dist
         self.n = n
-        self.othercomponent = othercomponent
-        self.list_components = self.othercomponent
+        self.othercomponent = othercomponent if othercomponent is not None else []
+        self.list_components = list(self.othercomponent)
         for _ in range(n):
             self.list_components.append(detector)
             self.list_components.append(MotorizedWavePlate())
@@ -350,8 +349,7 @@ class GHZsharing(DVExperiment):
             self.sourcerate
             * (self.mu ** (self.n / 2))
             * (self.pcoupling**self.n)
-            * (self.detector.efficiency ** (self.n))
+            * (self.detector.efficiency**self.n)
             * (10 ** (self.n * (-self.fiber.attenuation_fiber_db_km * self.dist / 10)))
         )
-        traw = objective / raw
-        return traw
+        return objective / raw

@@ -11,16 +11,14 @@ import matplotlib.pyplot as plt
 from qenergy import components as comp
 from qenergy.experiments_dv import BB84Experiment
 
-from studies import FIGSIZE_HALF, EXPORT_DIR
+from studies import FIGSIZE_HALF, EXPORT_DIR, GIGABIT, MJ
 
-dist = [d for d in range(200)]
+dist = list(range(200))
 wavelength = 1550
-gigabit = 1e9
 
-##Source
 laser = comp.LaserNKTkoheras1550()
 mu = 0.1
-sourcerate = 80 * 10**6
+sourcerate = 80e6
 pcoupling = 0.9
 
 # Detector
@@ -47,19 +45,19 @@ Experiment03 = BB84Experiment(
     sourcerate, pcoupling, mu, wavelength, 0.05, laser, detectoringaas, dist, other
 )
 
-tskr = Experiment01.time_skr(gigabit)
-tskr2 = Experiment02.time_skr(gigabit)
-tskr3 = Experiment03.time_skr(gigabit)
+tskr = Experiment01.time_skr(GIGABIT)
+tskr2 = Experiment02.time_skr(GIGABIT)
+tskr3 = Experiment03.time_skr(GIGABIT)
 
-Energysnspd = [Experiment01.total_energy(t) / 1000000 for t in tskr]
-Energyingaas = [Experiment02.total_energy(t) / 1000000 for t in tskr2]
-Energyingaas2 = [Experiment03.total_energy(t) / 1000000 for t in tskr3]
+Energysnspd = [Experiment01.total_energy(t) / MJ for t in tskr]
+Energyingaas = [Experiment02.total_energy(t) / MJ for t in tskr2]
+Energyingaas2 = [Experiment03.total_energy(t) / MJ for t in tskr3]
 
 
 fig, ax = plt.subplots(1, figsize=FIGSIZE_HALF)
-ax.plot(dist, Energysnspd, label="SNSPDs, QBER = 1\\%")
-ax.plot(dist, Energyingaas, label="APDs, QBER = 1\\%")
-ax.plot(dist, Energyingaas2, label="APDs, QBER = 5\\%")
+ax.plot(dist[:len(Energysnspd)], Energysnspd, label="SNSPDs, QBER = 1\\%")
+ax.plot(dist[:len(Energyingaas)], Energyingaas, label="APDs, QBER = 1\\%")
+ax.plot(dist[:len(Energyingaas2)], Energyingaas2, label="APDs, QBER = 5\\%")
 
 # plt.yscale("log")
 ax.set(xlabel="Distance [km]", ylabel="Energy consumption [MJ]")
